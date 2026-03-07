@@ -26,3 +26,12 @@ class MNISTCNN(nn.Module):
         x = self.features(x)
         x = self.classifier(x)
         return x
+
+def load_model(model_path="mnist_cnn.pth", device=None):
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model = MNISTCNN().to(device)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    return model, device
