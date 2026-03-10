@@ -35,9 +35,23 @@ class _HomePageState extends State<HomePage> {
   String _result = '아직 예측 결과 없음';
   bool _isLoading = false;
 
+  Future<void> _pickFromGallery() async {
+  final XFile? pickedFile = await _picker.pickImage(
+    source: ImageSource.gallery,
+    imageQuality: 100,
+  );
+
+  if (pickedFile == null) return;
+
+  setState(() {
+    _imageFile = File(pickedFile.path);
+    _result = '사진 선택 완료';
+  });
+}
+
   // Mac에서 실행 중인 FastAPI를 같은 와이파이의 폰으로 접속할 때
   // localhost 말고 맥의 실제 IP를 써야 함.
-  final String serverUrl = 'http://10.55.192.47:8000/predict';
+  final String serverUrl = 'http://192.168.0.63:8000/predict';
 
   Future<void> _takePhoto() async {
     final XFile? pickedFile = await _picker.pickImage(
