@@ -100,7 +100,7 @@ def preprocess_image(image_bytes, save_debug=True, debug_dir="debug_images"):
 
     # 8. 숫자 영역 crop
     digit = cleaned[y:y+h, x:x+w]
-    digit = cv2.dilate(digit, np.ones((2, 2), np.uint8), iterations=1)
+    digit = cv2.dilate(digit, np.ones((3, 3), np.uint8), iterations=2)
     
 
     if save_debug:
@@ -121,7 +121,7 @@ def preprocess_image(image_bytes, save_debug=True, debug_dir="debug_images"):
     # 10. 가장자리 여백 추가
     padded = cv2.copyMakeBorder(
         square,
-        5, 5, 5, 5,
+        2, 2, 2, 2,
         cv2.BORDER_CONSTANT,
         value=0
     )
