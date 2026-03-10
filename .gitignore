@@ -8,3 +8,6 @@ venv/
 
 # OS
 .DS_Store
+
+# Folder
+backend/debug_images
