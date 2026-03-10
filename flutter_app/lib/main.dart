@@ -35,22 +35,6 @@ class _HomePageState extends State<HomePage> {
   String _result = '아직 예측 결과 없음';
   bool _isLoading = false;
 
-  Future<void> _pickFromGallery() async {
-  final XFile? pickedFile = await _picker.pickImage(
-    source: ImageSource.gallery,
-    imageQuality: 100,
-  );
-
-  if (pickedFile == null) return;
-
-  setState(() {
-    _imageFile = File(pickedFile.path);
-    _result = '사진 선택 완료';
-  });
-}
-
-  // Mac에서 실행 중인 FastAPI를 같은 와이파이의 폰으로 접속할 때
-  // localhost 말고 맥의 실제 IP를 써야 함.
   final String serverUrl = 'http://192.168.0.63:8000/predict';
 
   Future<void> _takePhoto() async {
@@ -67,10 +51,24 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _pickFromGallery() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 100,
+    );
+
+    if (pickedFile == null) return;
+
+    setState(() {
+      _imageFile = File(pickedFile.path);
+      _result = '사진 선택 완료';
+    });
+  }
+
   Future<void> _predictImage() async {
     if (_imageFile == null) {
       setState(() {
-        _result = '먼저 사진을 찍어주세요';
+        _result = '먼저 사진을 선택해주세요';
       });
       return;
     }
@@ -93,8 +91,6 @@ class _HomePageState extends State<HomePage> {
         final data = jsonDecode(response.body);
 
         setState(() {
-          // 서버 응답 형식에 맞게 수정
-          // 예: {"prediction": 7}
           _result = '예측 결과: ${data['prediction']}';
         });
       } else {
@@ -126,7 +122,7 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: Center(
                 child: _imageFile == null
-                    ? const Text('촬영한 사진이 없습니다')
+                    ? const Text('선택한 사진이 없습니다')
                     : Image.file(_imageFile!),
               ),
             ),
@@ -134,18 +130,39 @@ class _HomePageState extends State<HomePage> {
             Text(
               _result,
               style: const TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _takePhoto,
-              child: const Text('사진 찍기'),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _takePhoto,
+                    child: const Text('사진 찍기'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _pickFromGallery,
+                    child: const Text('사진첩에서 가져오기'),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _predictImage,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('예측하기'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _predictImage,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('예측하기'),
+              ),
             ),
           ],
         ),
