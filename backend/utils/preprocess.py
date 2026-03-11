@@ -44,8 +44,8 @@ def preprocess_image(image_bytes, save_debug=True, debug_dir="debug_images"):
 
     # 6. threshold 후 작은 노이즈 정리
     kernel = np.ones((3, 3), np.uint8)
-    cleaned = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel)
+    cleaned = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)  #작은 점 노이즈 제거에 도움
+    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel)    #끊긴 선을 이어주고 작은 빈틈을 메우는 데 도움됨
 
     if save_debug:
         cv2.imwrite(os.path.join(debug_dir, "4_1_cleaned.png"), cleaned)
@@ -68,14 +68,15 @@ def preprocess_image(image_bytes, save_debug=True, debug_dir="debug_images"):
         if area < 30:
             continue
 
-        # 너무 큰 건 제외
+        # 전체 이미지의 20%보다 큰 영역이면 제외
         if area > h_img * w_img * 0.2:
             continue
 
-        # 테두리에 붙은 건 제외 (배경/종이/그림자 잡는 경우 많음)
+        # 가장자리 붙은 건 제외 (배경/종이/그림자 잡는 경우 많음)
         if x <= 1 or y <= 1 or (x + w) >= w_img - 1 or (y + h) >= h_img - 1:
             continue
-
+        
+        #남은 후보 중에서 가장 큰 면적 선택(숫자일 가능성이 가장 큰 컴포넌트를 고르기)
         if area > best_area:
             best_area = area
             best_idx = i
@@ -100,6 +101,7 @@ def preprocess_image(image_bytes, save_debug=True, debug_dir="debug_images"):
 
     # 8. 숫자 영역 crop
     digit = cleaned[y:y+h, x:x+w]
+    #숫자 획을 두껍게 만들기
     digit = cv2.dilate(digit, np.ones((3, 3), np.uint8), iterations=2)
     
 
@@ -135,10 +137,10 @@ def preprocess_image(image_bytes, save_debug=True, debug_dir="debug_images"):
     if save_debug:
         cv2.imwrite(os.path.join(debug_dir, "9_resized_28x28.png"), resized)
 
-    # 12. 0~1 범위로 정규화
+    # 12. 0~1 범위로 정규화(0->0.0, 255->1.0)
     resized = resized.astype(np.float32) / 255.0
 
-    # 디버그용: 정규화 전 사람이 보기 쉽게 다시 저장
+    # 디버그용: 정규화 전 사람이 보기 쉽게 다시 저장 
     if save_debug:
         viewable = (resized * 255).astype(np.uint8)
         cv2.imwrite(os.path.join(debug_dir, "10_viewable_before_mnist_norm.png"), viewable)
